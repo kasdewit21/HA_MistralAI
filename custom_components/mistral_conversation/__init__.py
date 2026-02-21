@@ -17,14 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = ["conversation"]
+# Both platforms are loaded; STT provides Voxtral transcription
+PLATFORMS = ["conversation", "stt"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mistral AI Conversation from a config entry."""
     api_key = entry.data[CONF_API_KEY]
 
-    # Validate API key is still working at startup
     session = async_get_clientsession(hass)
     try:
         async with session.get(
@@ -40,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Cannot connect to Mistral AI: {err}") from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 

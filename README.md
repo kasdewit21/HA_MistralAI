@@ -4,7 +4,7 @@
   <img src="custom_components/mistral_conversation/icon@2x.png" alt="Mistral AI Conversation" width="128" height="128">
 
   <h1>Mistral AI Conversation</h1>
-  <p><strong>Een Home Assistant custom integratie die Mistral AI beschikbaar maakt als volwaardige gespreksagent in de spraakassistent.</strong></p>
+  <p><strong>Home Assistant integratie met Mistral AI als gespreksagent, spraakherkenning (STT) en ondersteuning voor Mistral Agents.</strong></p>
 
   [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
   [![HA Version](https://img.shields.io/badge/Home%20Assistant-2023.5%2B-blue?style=for-the-badge&logo=home-assistant)](https://www.home-assistant.io/)
@@ -17,42 +17,35 @@
 ## Inhoudsopgave
 
 1. [Over dit project](#over-dit-project)
-2. [Wat is Mistral AI?](#wat-is-mistral-ai)
-3. [Functies](#functies)
-4. [Vereisten](#vereisten)
-5. [Installatie](#installatie)
-   - [Via HACS](#via-hacs-aanbevolen)
-   - [Handmatig](#handmatige-installatie)
-6. [Configuratie](#configuratie)
+2. [Functies](#functies)
+3. [Vereisten](#vereisten)
+4. [Installatie](#installatie)
+5. [Configuratie](#configuratie)
    - [API-sleutel aanmaken](#api-sleutel-aanmaken)
    - [Integratie instellen](#integratie-instellen)
    - [Als spraakassistent instellen](#als-spraakassistent-instellen)
-7. [Opties](#opties)
-   - [Beschikbare modellen](#beschikbare-modellen)
-   - [Systeemprompt](#systeemprompt)
-   - [Temperature](#temperature)
+6. [Opties & Modi](#opties--modi)
+   - [Model-modus](#model-modus)
+   - [Agent-modus](#agent-modus)
+7. [Spraakherkenning (STT)](#spraakherkenning-stt)
 8. [Apparaten bedienen](#apparaten-bedienen)
 9. [Gebruik als service-actie](#gebruik-als-service-actie)
 10. [Voorbeeldprompts](#voorbeeldprompts)
-11. [Verschil met BlaXun integratie](#verschil-met-blaxun-integratie)
-12. [Veelgestelde vragen](#veelgestelde-vragen)
-13. [Licentie](#licentie)
+11. [Veelgestelde vragen](#veelgestelde-vragen)
+12. [Licentie](#licentie)
 
 ---
 
 ## Over dit project
 
-Deze integratie breidt de originele [BlaXun Mistral AI integratie](https://github.com/BlaXun/home_assistant_mistral_ai) uit met de functionaliteit om Mistral AI te gebruiken als **volwaardige conversatie-agent** in de ingebouwde Home Assistant spraakassistent (Assist). Waar de originele integratie werkt via service-aanroepen en events, integreert deze versie diepgaand met HA's conversation-platform — net zoals de officiële Google Gemini en OpenAI integraties.
+Deze integratie maakt **Mistral AI** beschikbaar als volwaardige gespreksagent in Home Assistant. Je kunt kiezen tussen:
 
-<p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
+- **Model-modus**: Configureer alles direct in HA (model, prompt, temperature, etc.)
+- **Agent-modus**: Gebruik een vooraf geconfigureerde Agent uit de [Mistral Console](https://console.mistral.ai/build/agents) — inclusief eigen tools, systeem-prompt en web search
 
----
+Daarnaast biedt de integratie **spraakherkenning (STT)** via Mistral's Voxtral-model, zodat je gesproken vragen rechtstreeks kunt laten omzetten naar tekst in de HA Assist-pipeline.
 
-## Wat is Mistral AI?
-
-[Mistral AI](https://mistral.ai/) is een Frans AI-bedrijf dat krachtige taalmodellen ontwikkelt. Hun modellen scoren hoog op benchmarks, zijn beschikbaar via een betaalbare API en worden gerund vanuit Europa — wat gunstig is voor privacy (GDPR).
-
-Mistral biedt zowel open als gesloten modellen aan, van de lichtgewicht `mistral-7b` tot het krachtige `mistral-large`. Ze zijn bekend om hun efficiëntie: goede prestaties voor een lage prijs per token.
+> **Let op: TTS (tekst-naar-spraak)** wordt momenteel **niet** aangeboden door de Mistral API. Gebruik hiervoor een andere HA TTS provider (bijv. Google TTS, Piper, of ElevenLabs).
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
@@ -60,16 +53,17 @@ Mistral biedt zowel open als gesloten modellen aan, van de lichtgewicht `mistral
 
 ## Functies
 
-- ✅ **Selecteerbaar als gespreksagent** in *Instellingen → Spraakassistenten*
-- ✅ **Volledig instelbaar via de UI** — geen YAML vereist
-- ✅ **Keuze uit meerdere Mistral-modellen** (large, medium, small, nemo, ...)
-- ✅ **Home Assistant bedienen** via spraak of tekst (lampen, schakelaars, covers, ...)
-- ✅ **Gespreksgeheugen** — context blijft bewaard gedurende een sessie
-- ✅ **Meertalig** — antwoordt in de taal van de gebruiker
-- ✅ **Jinja2 templates** in de systeemprompt (gebruik `{{ now() }}`, `{{ ha_name }}` etc.)
-- ✅ **Instelbare creativiteit** via temperature slider (0.0–1.0)
-- ✅ **Veiligheidscheck** op service-aanroepen — alleen bekende services worden uitgevoerd
-- ✅ **Geen extra Python packages** — gebruikt HA's ingebouwde `aiohttp`
+| Functie | Status | Beschrijving |
+|---|---|---|
+| Gespreksagent in HA Assist | ✅ | Selecteerbaar als agent in Spraakassistenten |
+| Model-modus | ✅ | Directe toegang tot Mistral-modellen |
+| Agent-modus | ✅ | Gebruik geconfigureerde Agents uit Mistral Console |
+| Spraakherkenning (STT) | ✅ | Voxtral Mini via `/v1/audio/transcriptions` |
+| TTS (spraaksynthese) | ❌ | Niet beschikbaar in Mistral API |
+| HA apparaten bedienen | ✅ | Lampen, schakelaars, covers, etc. |
+| Gespreksgeheugen | ✅ | Context blijft bewaard per sessie |
+| Jinja2 systeemprompt | ✅ | Templates met `{{ now() }}`, `{{ ha_name }}` etc. |
+| Meertalig | ✅ | Antwoordt in de taal van de gebruiker |
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
@@ -81,8 +75,7 @@ Mistral biedt zowel open als gesloten modellen aan, van de lichtgewicht `mistral
 |---|---|
 | Home Assistant Core | 2023.5 |
 | Python | 3.11 |
-| Mistral AI account | — |
-| Mistral API-sleutel | — |
+| Mistral AI account + API-sleutel | — |
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
@@ -92,28 +85,19 @@ Mistral biedt zowel open als gesloten modellen aan, van de lichtgewicht `mistral
 
 ### Via HACS (aanbevolen)
 
-1. Zorg dat [HACS](https://hacs.xyz/) geïnstalleerd is
-2. Ga in HACS naar **Integraties**
-3. Klik rechtsboven op de **drie puntjes** → **Aangepaste repositories**
-4. Vul in:
-   - **URL:** `https://github.com/JOUW-GEBRUIKER/mistral_conversation`
-   - **Categorie:** Integratie
-5. Klik **Toevoegen**, sluit het venster
-6. Zoek op **"Mistral AI Conversation"** en klik **Downloaden**
-7. Herstart Home Assistant
+1. HACS → **Integraties** → ⋮ → **Aangepaste repositories**
+2. URL: `https://github.com/JOUW-GEBRUIKER/mistral_conversation` — categorie: **Integratie**
+3. Zoek "Mistral AI Conversation" → **Downloaden**
+4. Herstart Home Assistant volledig
 
-### Handmatige installatie
+### Handmatig
 
-1. Download de nieuwste release als `.zip`
-2. Pak uit en kopieer de map `custom_components/mistral_conversation/` naar:
-   ```
-   /config/custom_components/mistral_conversation/
-   ```
-3. **Verwijder eventuele `.pyc` cachebestanden** van een vorige installatie:
+1. Kopieer de map `custom_components/mistral_conversation/` naar `/config/custom_components/`
+2. Verwijder eventuele `__pycache__` mappen van een oude versie:
    ```bash
    rm -rf /config/custom_components/mistral_conversation/__pycache__
    ```
-4. Herstart Home Assistant volledig (niet alleen herladen)
+3. **Volledig herstarten** (niet alleen herladen)
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
@@ -125,91 +109,121 @@ Mistral biedt zowel open als gesloten modellen aan, van de lichtgewicht `mistral
 
 1. Maak een account aan op [mistral.ai](https://mistral.ai/)
 2. Ga naar [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys)
-3. Klik **Create new key**
-4. Kopieer de sleutel (je ziet hem maar één keer!)
-
-> **Tip:** Mistral biedt een gratis tier aan. Controleer de actuele limieten op [mistral.ai/pricing](https://mistral.ai/pricing/).
+3. Klik **Create new key** en kopieer de sleutel
 
 ### Integratie instellen
 
-1. Ga naar **Instellingen → Apparaten & Diensten**
-2. Klik rechtsonder op **+ Integratie toevoegen**
-3. Zoek op **Mistral AI Conversation**
-4. Voer je **API-sleutel** in
-5. Klik **Voltooien**
-
-De integratie verschijnt nu onder Apparaten & Diensten.
+1. **Instellingen → Apparaten & Diensten → + Integratie toevoegen**
+2. Zoek **Mistral AI Conversation**
+3. Voer je API-sleutel in → Klik **Voltooien**
 
 ### Als spraakassistent instellen
 
-1. Ga naar **Instellingen → Spraakassistenten**
-2. Klik op je assistent (standaard heet die "Home Assistant")
-3. Kies bij **Gespreksagent** de optie **Mistral AI Conversation**
-4. Klik **Opslaan**
-
-Vanaf nu verwerkt Mistral AI alle gesprekken via je assistent.
+1. **Instellingen → Spraakassistenten** → klik op je assistent
+2. Kies bij **Gespreksagent**: **Mistral AI Conversation**
+3. Kies bij **Spraak naar tekst**: **Mistral AI STT (Voxtral)** *(optioneel)*
+4. Sla op
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
 ---
 
-## Opties
+## Opties & Modi
 
-Klik op de integratie in **Instellingen → Apparaten & Diensten** en dan op **Configureren** om de opties aan te passen.
+Klik op de integratie → **Configureren** om de opties te wijzigen.
+
+### Model-modus
+
+Gebruik deze modus als je de AI volledig in HA wilt configureren.
 
 | Optie | Standaard | Beschrijving |
 |---|---|---|
-| **Systeemprompt** | Zie hieronder | Instructies voor de AI. Ondersteunt Jinja2 templates. |
-| **Model** | `mistral-large-latest` | Welk Mistral-model gebruikt wordt |
-| **Max tokens** | `1024` | Maximale lengte van het AI-antwoord |
-| **Temperature** | `0.7` | Creativiteit van de antwoorden (0.0–1.0) |
-| **HA bedienen** | Aan | Of de AI je apparaten mag bedienen |
+| **Modus** | Model | Selecteer "Model" |
+| **AI-model** | `mistral-large-latest` | Welk Mistral-model wordt gebruikt |
+| **Systeemprompt** | Zie hieronder | Instructies voor de AI (Jinja2 ondersteund) |
+| **Temperature** | `0.7` | Creativiteit (0.0–1.0) |
+| **Max tokens** | `1024` | Maximale antwoordlengte |
 
-### Beschikbare modellen
+#### Beschikbare modellen
 
-| Model | Beschrijving | Aanbevolen voor |
-|---|---|---|
-| `mistral-large-latest` | Krachtigste model, beste begrip | Dagelijks gebruik, complexe vragen |
-| `mistral-medium-latest` | Goede balans kwaliteit / kosten | Algemeen gebruik |
-| `mistral-small-latest` | Snel en goedkoop | Eenvoudige commando's |
-| `open-mistral-nemo` | Compact open source model | Lage latentie |
-| `open-codestral-mamba` | Gespecialiseerd in code | Code genereren via automations |
-| `mistral-7b-latest` | Kleinste model, snelst | Snelle antwoorden |
+| Model | Gebruik |
+|---|---|
+| `mistral-large-latest` | Krachtigst, beste begrip — aanbevolen |
+| `mistral-medium-latest` | Goed evenwicht kwaliteit/kosten |
+| `mistral-small-latest` | Snel en goedkoop |
+| `open-mistral-nemo` | Open source compact model |
+| `open-codestral-mamba` | Gespecialiseerd in code |
+| `mistral-7b-latest` | Kleinste, snelste model |
 
-> **Aanbeveling:** Start met `mistral-large-latest` voor de beste resultaten bij het bedienen van je huis.
-
-### Systeemprompt
-
-De systeemprompt bepaalt hoe de AI zich gedraagt. Je kunt Jinja2 templates gebruiken:
+#### Voorbeeld systeemprompt
 
 ```jinja2
-Je bent een behulpzame spraakassistent voor het slimme huis genaamd {{ ha_name }}.
-Antwoord altijd in het Nederlands, tenzij de gebruiker een andere taal spreekt.
-Vandaag is het {{ now().strftime('%A %d %B %Y') }}.
-De tijd is nu {{ now().strftime('%H:%M') }}.
-Wees vriendelijk, bondig en to-the-point.
+Je bent een behulpzame spraakassistent voor {{ ha_name }}.
+Antwoord in het Nederlands, tenzij de gebruiker een andere taal spreekt.
+Vandaag is het {{ now().strftime('%A %d %B %Y') }}, tijd: {{ now().strftime('%H:%M') }}.
+Wees vriendelijk en bondig.
 ```
 
-**Beschikbare template-variabelen:**
+### Agent-modus
 
-| Variabele | Omschrijving |
+Gebruik deze modus om een vooraf geconfigureerde Agent uit de Mistral Console te gebruiken. De agent heeft zijn eigen:
+- Model
+- Systeem-prompt / instructies
+- Ingebouwde tools (web search, code interpreter, document library, etc.)
+
+#### Stap 1: Agent aanmaken in Mistral Console
+
+1. Ga naar [console.mistral.ai/build/agents](https://console.mistral.ai/build/agents)
+2. Klik **Create new agent**
+3. Stel in: naam, model, instructies, en optioneel tools (bijv. web search)
+4. Kopieer het **Agent ID** — dit begint met `ag_...`
+
+#### Stap 2: Agent ID invullen in HA
+
+1. Ga naar de integratie-opties in HA
+2. Selecteer modus: **Agent**
+3. Plak het Agent ID in het veld **Agent ID**
+4. Sla op
+
+> **Tip:** Agents zijn ideaal als je wilt dat de AI toegang heeft tot web search, eigen kennisbanken (RAG), of andere geavanceerde tools die je in de console hebt geconfigureerd.
+
+<p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
+
+---
+
+## Spraakherkenning (STT)
+
+De integratie registreert automatisch een **Voxtral STT-entiteit** (`stt.mistral_ai_stt_voxtral`).
+
+### Instellen als STT in de Assist-pipeline
+
+1. **Instellingen → Spraakassistenten** → klik op je assistent
+2. Kies bij **Spraak naar tekst**: **Mistral AI STT (Voxtral)**
+3. Sla op
+
+### Voxtral specificaties
+
+| Eigenschap | Waarde |
 |---|---|
-| `{{ ha_name }}` | Naam van je Home Assistant installatie |
-| `{{ now() }}` | Huidige datum en tijd |
-| `{{ now().strftime(...) }}` | Opgemaakte datum/tijd |
+| Model | `voxtral-mini-latest` |
+| Maximale audio-duur | 30 minuten |
+| Ondersteunde formaten | WAV, OGG |
+| Sample rate | 16.000 Hz (16-bit mono) |
+| Taaldetectie | Automatisch of handmatig |
+| Prijzen | ~$0.003 per minuut |
 
-### Temperature
+### Taal instellen
 
-De temperature bepaalt hoe creatief of voorspelbaar de AI antwoorden geeft:
+In de opties kun je een taalcode opgeven bij **STT taalcode** voor betere accuratesse:
 
-| Waarde | Gedrag |
+| Taal | Code |
 |---|---|
-| `0.0` | Deterministisch — altijd hetzelfde antwoord |
-| `0.3` | Conservatief, nauwkeurig |
-| `0.7` | Gebalanceerd (aanbevolen) |
-| `1.0` | Creatief, variabel |
-
-> **Let op:** Mistral's temperatuurbereik is `0.0–1.0`, afwijkend van sommige andere modellen.
+| Nederlands | `nl` |
+| Engels | `en` |
+| Duits | `de` |
+| Frans | `fr` |
+| Spaans | `es` |
+| Automatisch | *(leeg laten)* |
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
@@ -217,30 +231,29 @@ De temperature bepaalt hoe creatief of voorspelbaar de AI antwoorden geeft:
 
 ## Apparaten bedienen
 
-Als **"Laat AI Home Assistant bedienen"** is ingeschakeld, kan de AI entiteiten in je huis bedienen.
+Als **"Laat AI Home Assistant bedienen"** is ingeschakeld in de opties, kan de AI entiteiten in je huis besturen.
 
-### Stap 1: Entiteiten blootstellen
+### Blootgestelde apparaten instellen
 
-Ga naar **Instellingen → Spraakassistenten → Blootgestelde apparaten** en zet de entiteiten aan die de AI mag zien en bedienen.
+Ga naar **Instellingen → Spraakassistenten → Blootgestelde apparaten** om te bepalen welke entiteiten de AI mag zien en bedienen.
 
-### Stap 2: Praten
+### Ondersteunde commando's
 
-Vraag gewoon wat je wilt:
-
-| Wat je zegt | Wat de AI doet |
+| Wat je zegt | Wat er gebeurt |
 |---|---|
-| "Zet de keukenlamp aan" | `light.turn_on` op de keukenlamp |
-| "Doe alle lichten uit" | `light.turn_off` op alle lichten |
+| "Zet de keukenlamp aan" | `light.turn_on` |
+| "Doe alle lichten uit" | `light.turn_off` |
 | "Open de gordijnen" | `cover.open_cover` |
 | "Vergrendel de voordeur" | `lock.lock` |
 | "Zet de tv aan" | `media_player.turn_on` |
-| "Schakel de ventilator om" | `fan.toggle` |
+| "Schakel ventilator om" | `fan.toggle` |
+| "Activeer filmscene" | `scene.turn_on` |
 
 ### Ondersteunde domeinen
 
-De integratie ondersteunt de volgende HA-domeinen voor veilige service-aanroepen:
-
 `light` · `switch` · `cover` · `media_player` · `fan` · `climate` · `lock` · `alarm_control_panel` · `scene` · `script` · `automation` · `homeassistant`
+
+> **Let op bij Agent-modus:** Als je een Agent gebruikt met ingebouwde HA-tools, regelt de agent zelf de service-calls via de Mistral Console-configuratie. De bovenstaande "control_ha" instelling werkt dan naast de agent.
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
@@ -248,19 +261,19 @@ De integratie ondersteunt de volgende HA-domeinen voor veilige service-aanroepen
 
 ## Gebruik als service-actie
 
-Naast de spraakassistent kun je de integratie ook gebruiken via de standaard `conversation.process` service-actie. Dit is handig in automations en scripts:
+Gebruik `conversation.process` in automations:
 
 ```yaml
 action: conversation.process
 data:
   agent_id: conversation.mistral_ai_conversation
-  text: "Wat is de staat van de keukenlamp?"
+  text: "Wat is de temperatuur buiten?"
 response_variable: result
 ```
 
 Het antwoord vind je in `result.response.speech.plain.speech`.
 
-### Voorbeeld: Dynamische pushmelding
+### Voorbeeld: Dynamische melding
 
 ```yaml
 alias: Slimme deurbelmelding
@@ -269,8 +282,8 @@ sequence:
     data:
       agent_id: conversation.mistral_ai_conversation
       text: >
-        De deurbel heeft een foto gemaakt. Beschrijf in één zin wat er voor
-        de deur kan zijn, gebaseerd op tijdstip {{ now().strftime('%H:%M') }}.
+        De deurbel heeft gerinkeld om {{ now().strftime('%H:%M') }}.
+        Geef een korte, vriendelijke melding van één zin.
     response_variable: ai_result
   - action: notify.mobile_app
     data:
@@ -278,7 +291,7 @@ sequence:
       message: "{{ ai_result.response.speech.plain.speech }}"
 ```
 
-### Voorbeeld: Ochtendrapport
+### Voorbeeld: Ochtendrapport via TTS
 
 ```yaml
 alias: Ochtendrapport
@@ -287,13 +300,12 @@ sequence:
     data:
       agent_id: conversation.mistral_ai_conversation
       text: >
-        Geef een korte samenvatting voor mijn dag. Buiten is het
-        {{ states('sensor.buiten_temperatuur') }}°C.
-        Ik heb {{ states('calendar.werk') }} vandaag.
+        Geef een korte samenvatting voor mijn dag.
+        Buiten is het {{ states('sensor.buiten_temperatuur') }}°C.
     response_variable: rapport
   - action: tts.speak
     target:
-      entity_id: tts.google_translate_nl
+      entity_id: tts.piper   # gebruik een andere TTS provider voor spraak
     data:
       media_player_entity_id: media_player.woonkamer
       message: "{{ rapport.response.speech.plain.speech }}"
@@ -305,8 +317,6 @@ sequence:
 
 ## Voorbeeldprompts
 
-Hier zijn wat ideeën voor wat je aan de assistent kunt vragen:
-
 **Informatie over je huis:**
 - *"Hoeveel lampen zijn er momenteel aan?"*
 - *"Wat is de temperatuur in de woonkamer?"*
@@ -314,35 +324,13 @@ Hier zijn wat ideeën voor wat je aan de assistent kunt vragen:
 
 **Bedienen:**
 - *"Zet alle lampen in de slaapkamer uit"*
-- *"Zet de thermostaat op 20 graden"*
 - *"Activeer de 'Film kijken' scene"*
+- *"Vergrendel de voordeur"*
 
-**Algemene vragen:**
-- *"Wat kan ik vanavond koken met pasta en kaas?"*
-- *"Stel een timer in voor 10 minuten"*
+**Met een web search agent:**
 - *"Wat is het nieuws vandaag?"*
-
-<p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
-
----
-
-## Verschil met BlaXun integratie
-
-Deze integratie is gebaseerd op en geïnspireerd door de [originele BlaXun Mistral AI integratie](https://github.com/BlaXun/home_assistant_mistral_ai). De voornaamste verschillen:
-
-| Functie | BlaXun mistral_ai_api | Mistral AI Conversation |
-|---|---|---|
-| Gespreksagent in HA Assist | ❌ | ✅ |
-| Selecteerbaar in Spraakassistenten | ❌ | ✅ |
-| UI-configuratie | Beperkt (YAML) | ✅ Volledig via UI |
-| HA apparaten bedienen | ❌ | ✅ |
-| Gespreksgeheugen (context) | Handmatig via `conversation_id` | ✅ Automatisch |
-| Gebruik als service-actie | ✅ | ✅ via `conversation.process` |
-| Mistral Agents (agent_id) | ✅ | ❌ (gepland) |
-| Sensor entity (state) | ✅ | ❌ |
-| Event bij antwoord | ✅ | ❌ |
-
-Gebruik je de BlaXun integratie voor automation-gebaseerde flows? Dan kun je die gewoon naast deze integratie blijven gebruiken.
+- *"Wat is het weerbericht voor morgen in Amsterdam?"*
+- *"Zoek op hoeveel het gastarief momenteel is"*
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 
@@ -351,22 +339,25 @@ Gebruik je de BlaXun integratie voor automation-gebaseerde flows? Dan kun je die
 ## Veelgestelde vragen
 
 **Q: Ik zie de integratie niet in de dropdown bij Spraakassistenten.**  
-A: Zorg dat je een **volledige herstart** hebt gedaan (niet alleen "opnieuw laden"). Verwijder ook eventuele `__pycache__` mappen.
+A: Zorg dat je een **volledige herstart** hebt gedaan en oude `__pycache__` mappen hebt verwijderd.
 
-**Q: Ik krijg een 400 Bad Request fout.**  
-A: Controleer of je temperature tussen 0.0 en 1.0 staat. Mistral accepteert geen hogere waarden.
+**Q: Ik krijg een 400 Bad Request.**  
+A: Controleer dat temperature tussen 0.0 en 1.0 staat. Mistral accepteert geen hogere waarden.
 
-**Q: De AI antwoordt in het Engels terwijl ik Nederlands spreek.**  
-A: Pas de systeemprompt aan: voeg toe `Antwoord altijd in het Nederlands.`
+**Q: Mijn agent reageert niet.**  
+A: Controleer of het Agent ID correct is (begint met `ag_...`). Test het ID eerst in de Mistral Console.
 
-**Q: Kan ik meerdere instanties draaien (bijv. één per kamer)?**  
-A: Ja — voeg de integratie meerdere keren toe met verschillende API-sleutels en systeem-prompts.
+**Q: Kan ik TTS toevoegen?**  
+A: Mistral heeft geen eigen TTS API. Gebruik Piper (lokaal), Google TTS, of ElevenLabs als TTS provider in HA.
 
-**Q: Hoe duur is het gebruik?**  
-A: Zie [mistral.ai/pricing](https://mistral.ai/pricing/). Voor normaal thuisgebruik verwacht je enkele centen per dag met `mistral-small`.
+**Q: Hoe duur is Voxtral STT?**  
+A: Circa $0.003 per minuut audio. Voor normaal thuisgebruik verwacht je minder dan €1 per maand.
+
+**Q: Kan ik Agent-modus én HA-apparaten bedienen combineren?**  
+A: Ja. Zet "Laat AI Home Assistant bedienen" aan én gebruik een Agent ID. De integratie probeert dan service-calls uit te voeren als de agent een JSON-actie teruggeeft.
 
 **Q: Worden mijn gesprekken opgeslagen?**  
-A: Mistral AI verwerkt je verzoeken via hun servers. Raadpleeg hun [privacybeleid](https://mistral.ai/privacy-policy) voor details.
+A: Mistral AI verwerkt verzoeken via hun servers. Zie hun [privacybeleid](https://mistral.ai/privacy-policy) voor details.
 
 <p align="right">(<a href="#readme-top">terug naar boven</a>)</p>
 

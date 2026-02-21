@@ -22,22 +22,26 @@
   "options": {
     "step": {
       "init": {
-        "title": "Instellingen Mistral AI Conversation",
+        "title": "Mistral AI Conversation instellingen",
         "data": {
-          "prompt": "Systeemprompt (instructies voor de AI)",
-          "model": "AI-model",
-          "max_tokens": "Maximaal aantal tokens in antwoord",
-          "temperature": "Creativiteit (temperature)",
-          "top_p": "Top P",
-          "control_ha": "Laat AI Home Assistant bedienen"
+          "mode": "Modus",
+          "agent_id": "Agent ID (alleen bij Agent-modus)",
+          "model": "AI-model (alleen bij Model-modus)",
+          "prompt": "Systeemprompt (alleen bij Model-modus)",
+          "temperature": "Creativiteit / Temperature (alleen bij Model-modus)",
+          "max_tokens": "Maximaal tokens in antwoord",
+          "control_ha": "Laat AI Home Assistant bedienen",
+          "stt_language": "Speech recognition language (STT)"
         },
         "data_description": {
-          "prompt": "Instructies voor de AI. Ondersteunt Home Assistant Jinja2 templates.",
-          "model": "Welk Mistral-model je wilt gebruiken.",
+          "mode": "Kies 'Model' om een model direct in HA te configureren, of 'Agent' om een vooraf geconfigureerde Agent uit de Mistral Console te gebruiken.",
+          "agent_id": "Het ID van een agent die je hebt aangemaakt op console.mistral.ai/build/agents (begint met 'ag_...'). De agent heeft zijn eigen model, systeem-prompt en tools.",
+          "model": "Welk Mistral-model wordt gebruikt. Alleen actief als modus = Model.",
+          "prompt": "Instructies voor de AI. Ondersteunt Jinja2 templates. Alleen actief als modus = Model.",
+          "temperature": "0 = deterministisch, 1 = creatief. Mistral bereik: 0.0–1.0. Alleen actief als modus = Model.",
           "max_tokens": "Maximale lengte van het AI-antwoord in tokens.",
-          "temperature": "0 = deterministisch, 2 = heel creatief.",
-          "top_p": "Alternatief voor temperature. Laat normaal op 1.",
-          "control_ha": "Als ingeschakeld kan de AI apparaten in je huis bedienen."
+          "control_ha": "Als ingeschakeld kan de AI apparaten in je huis bedienen via gesproken of getypte opdrachten.",
+          "stt_language": "Language used by Voxtral for speech-to-text. Select 'Auto-detect' to let Voxtral determine the language automatically."
         }
       }
     }

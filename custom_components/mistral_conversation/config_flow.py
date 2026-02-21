@@ -12,20 +12,28 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .stt import LANGUAGE_OPTIONS
 from .const import (
+    CHAT_MODELS,
+    CONF_AGENT_ID,
     CONF_CONTROL_HA,
     CONF_MAX_TOKENS,
+    CONF_MODE,
     CONF_MODEL,
     CONF_PROMPT,
+    CONF_STT_LANGUAGE,
     CONF_TEMPERATURE,
     DEFAULT_CONTROL_HA,
     DEFAULT_MAX_TOKENS,
+    DEFAULT_MODE,
     DEFAULT_MODEL,
     DEFAULT_PROMPT,
+    DEFAULT_STT_LANGUAGE,
     DEFAULT_TEMPERATURE,
     DOMAIN,
     MISTRAL_API_BASE,
-    MODELS,
+    MODE_AGENT,
+    MODE_MODEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,16 +93,13 @@ class MistralConversationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> "MistralOptionsFlow":
-        # NOTE: do NOT pass config_entry to constructor — HA injects it as a read-only property
+        # NOTE: No __init__, no self.config_entry assignment.
+        # HA injects config_entry as a read-only property automatically.
         return MistralOptionsFlow()
 
 
 class MistralOptionsFlow(config_entries.OptionsFlow):
-    """Options flow.
-    
-    IMPORTANT: No __init__ and no self.config_entry assignment.
-    HA sets config_entry as a read-only property automatically.
-    """
+    """Options flow — HA injects self.config_entry automatically as a read-only property."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -103,21 +108,55 @@ class MistralOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         opts = self.config_entry.options
+        current_mode = opts.get(CONF_MODE, DEFAULT_MODE)
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
+                # ── Mode selector ──────────────────────────────────────────
+                vol.Required(
+                    CONF_MODE,
+                    default=current_mode,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value=MODE_MODEL, label="Model (configureer in HA)"),
+                            selector.SelectOptionDict(value=MODE_AGENT, label="Agent (geconfigureerd in Mistral Console)"),
+                        ],
+                        mode=selector.SelectSelectorMode.LIST,
+                        translation_key=CONF_MODE,
+                    )
+                ),
+
+                # ── Agent ID (only used in agent mode) ────────────────────
                 vol.Optional(
-                    CONF_PROMPT,
-                    default=opts.get(CONF_PROMPT, DEFAULT_PROMPT),
-                ): selector.TemplateSelector(),
+                    CONF_AGENT_ID,
+                    default=opts.get(CONF_AGENT_ID, ""),
+                ): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+                ),
+
+                # ── Model settings (only used in model mode) ──────────────
                 vol.Optional(
                     CONF_MODEL,
                     default=opts.get(CONF_MODEL, DEFAULT_MODEL),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=MODELS,
+                        options=CHAT_MODELS,
                         mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional(
+                    CONF_PROMPT,
+                    default=opts.get(CONF_PROMPT, DEFAULT_PROMPT),
+                ): selector.TemplateSelector(),
+                vol.Optional(
+                    CONF_TEMPERATURE,
+                    default=opts.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0.0, max=1.0, step=0.05,
+                        mode=selector.NumberSelectorMode.SLIDER,
                     )
                 ),
                 vol.Optional(
@@ -129,19 +168,25 @@ class MistralOptionsFlow(config_entries.OptionsFlow):
                         mode=selector.NumberSelectorMode.BOX,
                     )
                 ),
-                # Mistral temperature range is 0.0–1.0 (NOT 0–2 like OpenAI)
-                vol.Optional(
-                    CONF_TEMPERATURE,
-                    default=opts.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0.0, max=1.0, step=0.05,
-                        mode=selector.NumberSelectorMode.SLIDER,
-                    )
-                ),
+
+                # ── Shared settings ───────────────────────────────────────
                 vol.Optional(
                     CONF_CONTROL_HA,
                     default=opts.get(CONF_CONTROL_HA, DEFAULT_CONTROL_HA),
                 ): selector.BooleanSelector(),
+
+                # ── STT settings ──────────────────────────────────────────
+                vol.Optional(
+                    CONF_STT_LANGUAGE,
+                    default=opts.get(CONF_STT_LANGUAGE, DEFAULT_STT_LANGUAGE),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value=code, label=name)
+                            for code, name in LANGUAGE_OPTIONS
+                        ],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
             }),
         )
