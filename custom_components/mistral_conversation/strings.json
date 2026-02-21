@@ -1,0 +1,45 @@
+{
+  "title": "Mistral AI Conversation",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbind met Mistral AI",
+        "description": "Voer je Mistral AI API-sleutel in. Aanmaken via [console.mistral.ai]({api_key_url}).",
+        "data": {
+          "api_key": "API-sleutel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken. Controleer je internetverbinding.",
+      "invalid_auth": "Ongeldige API-sleutel. Controleer de sleutel op console.mistral.ai.",
+      "unknown": "Onbekende fout. Zie de logbestanden voor details."
+    },
+    "abort": {
+      "already_configured": "Mistral AI Conversation is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Instellingen Mistral AI Conversation",
+        "data": {
+          "prompt": "Systeemprompt (instructies voor de AI)",
+          "model": "AI-model",
+          "max_tokens": "Maximaal aantal tokens in antwoord",
+          "temperature": "Creativiteit (temperature)",
+          "top_p": "Top P",
+          "control_ha": "Laat AI Home Assistant bedienen"
+        },
+        "data_description": {
+          "prompt": "Instructies voor de AI. Ondersteunt Home Assistant Jinja2 templates.",
+          "model": "Welk Mistral-model je wilt gebruiken.",
+          "max_tokens": "Maximale lengte van het AI-antwoord in tokens.",
+          "temperature": "0 = deterministisch, 2 = heel creatief.",
+          "top_p": "Alternatief voor temperature. Laat normaal op 1.",
+          "control_ha": "Als ingeschakeld kan de AI apparaten in je huis bedienen."
+        }
+      }
+    }
+  }
+}
