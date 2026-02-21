@@ -69,7 +69,7 @@ You can choose between:
 1. Open HACS → Integrations → Custom repositories  
 2. Add:
 
-        https://github.com/kasdewit21/mistral_conversation
+        https://github.com/SnarfNL/mistral_conversation
 
    Category: Integration  
 3. Install “Mistral AI Conversation”  
