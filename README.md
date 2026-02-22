@@ -26,6 +26,11 @@ Home Assistant integration that enables **Mistral AI** as a conversation agent, 
 
 ---
 
+## Release notes
+v.1.9 Improved multi language support (2026-2-22)
+
+---
+
 ## About This Project
 
 This integration makes **Mistral AI** available as a full conversation agent inside Home Assistant.

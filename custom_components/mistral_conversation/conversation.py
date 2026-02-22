@@ -62,21 +62,87 @@ _ALLOWED_SERVICES: dict[str, list[str]] = {
     "automation":    ["turn_on", "turn_off", "trigger"],
 }
 
-_SERVICE_VERBS: dict[str, str] = {
-    "turn_on":    "aangezet",
-    "turn_off":   "uitgezet",
-    "toggle":     "omgeschakeld",
-    "open_cover": "geopend",
-    "close_cover":"gesloten",
-    "stop_cover": "gestopt",
-    "lock":       "vergrendeld",
-    "unlock":     "ontgrendeld",
-    "media_play": "gestart",
-    "media_pause":"gepauzeerd",
-    "media_stop": "gestopt",
-    "volume_up":  "harder gezet",
-    "volume_down":"zachter gezet",
+# Per-service past-tense verbs, keyed by language code
+_SERVICE_VERBS: dict[str, dict[str, str]] = {
+    "turn_on":    {"nl": "aangezet",     "en": "turned on",      "de": "eingeschaltet",   "fr": "allumé",         "es": "encendido"},
+    "turn_off":   {"nl": "uitgezet",     "en": "turned off",     "de": "ausgeschaltet",   "fr": "éteint",         "es": "apagado"},
+    "toggle":     {"nl": "omgeschakeld", "en": "toggled",        "de": "umgeschaltet",    "fr": "basculé",        "es": "alternado"},
+    "open_cover": {"nl": "geopend",      "en": "opened",         "de": "geöffnet",        "fr": "ouvert",         "es": "abierto"},
+    "close_cover":{"nl": "gesloten",     "en": "closed",         "de": "geschlossen",     "fr": "fermé",          "es": "cerrado"},
+    "stop_cover": {"nl": "gestopt",      "en": "stopped",        "de": "gestoppt",        "fr": "arrêté",         "es": "detenido"},
+    "lock":       {"nl": "vergrendeld",  "en": "locked",         "de": "verriegelt",      "fr": "verrouillé",     "es": "bloqueado"},
+    "unlock":     {"nl": "ontgrendeld",  "en": "unlocked",       "de": "entriegelt",      "fr": "déverrouillé",   "es": "desbloqueado"},
+    "media_play": {"nl": "gestart",      "en": "started",        "de": "gestartet",       "fr": "démarré",        "es": "iniciado"},
+    "media_pause":{"nl": "gepauzeerd",   "en": "paused",         "de": "pausiert",        "fr": "mis en pause",   "es": "pausado"},
+    "media_stop": {"nl": "gestopt",      "en": "stopped",        "de": "gestoppt",        "fr": "arrêté",         "es": "detenido"},
+    "volume_up":  {"nl": "harder gezet", "en": "turned up",      "de": "lauter gestellt", "fr": "monté",          "es": "subido"},
+    "volume_down":{"nl": "zachter gezet","en": "turned down",    "de": "leiser gestellt", "fr": "baissé",         "es": "bajado"},
 }
+
+# UI strings per language code (falls back to "en")
+_STRINGS: dict[str, dict[str, str]] = {
+    "done": {
+        "nl": "Klaar", "en": "Done", "de": "Erledigt", "fr": "Fait", "es": "Listo",
+    },
+    "is": {
+        "nl": "is", "en": "is", "de": "ist", "fr": "est", "es": "está",
+    },
+    "blocked": {
+        "nl": "Ik kan die actie niet uitvoeren ({domain}.{service} is niet toegestaan).",
+        "en": "I cannot perform that action ({domain}.{service} is not allowed).",
+        "de": "Ich kann diese Aktion nicht ausführen ({domain}.{service} ist nicht erlaubt).",
+        "fr": "Je ne peux pas effectuer cette action ({domain}.{service} n'est pas autorisé).",
+        "es": "No puedo realizar esa acción ({domain}.{service} no está permitido).",
+    },
+    "failed": {
+        "nl": "Sorry, dat is mislukt: {err}",
+        "en": "Sorry, that failed: {err}",
+        "de": "Entschuldigung, das hat nicht geklappt: {err}",
+        "fr": "Désolé, ça a échoué : {err}",
+        "es": "Lo siento, eso falló: {err}",
+    },
+    "unexpected": {
+        "nl": "Sorry, er ging iets onverwachts mis.",
+        "en": "Sorry, something unexpected went wrong.",
+        "de": "Entschuldigung, es ist ein unerwarteter Fehler aufgetreten.",
+        "fr": "Désolé, une erreur inattendue s'est produite.",
+        "es": "Lo siento, algo inesperado salió mal.",
+    },
+    "api_error": {
+        "nl": "Sorry, kon Mistral AI niet bereiken: {err}",
+        "en": "Sorry, could not reach Mistral AI: {err}",
+        "de": "Entschuldigung, Mistral AI war nicht erreichbar: {err}",
+        "fr": "Désolé, impossible de contacter Mistral AI : {err}",
+        "es": "Lo siento, no se pudo conectar a Mistral AI: {err}",
+    },
+    "no_agent_id": {
+        "nl": "Fout: geen Agent ID ingesteld. Vul een Agent ID in via de integratie-opties.",
+        "en": "Error: no Agent ID configured. Please set an Agent ID in the integration options.",
+        "de": "Fehler: Keine Agent-ID konfiguriert. Bitte legen Sie eine Agent-ID in den Integrationsoptionen fest.",
+        "fr": "Erreur : aucun identifiant d'agent configuré. Veuillez en définir un dans les options d'intégration.",
+        "es": "Error: no hay ID de agente configurado. Por favor, configure uno en las opciones de integración.",
+    },
+}
+
+
+def _lang_code(language: str) -> str:
+    """Normalise 'de-DE' → 'de', already-short codes pass through."""
+    return language.split("-")[0].lower() if language else "en"
+
+
+def _t(key: str, language: str, **kwargs) -> str:
+    """Return a translated string, falling back to English."""
+    lang = _lang_code(language)
+    strings = _STRINGS.get(key, {})
+    text = strings.get(lang) or strings.get("en", key)
+    return text.format(**kwargs) if kwargs else text
+
+
+def _service_verb(service: str, language: str) -> str:
+    """Return a localised past-tense verb for the service action."""
+    lang = _lang_code(language)
+    verbs = _SERVICE_VERBS.get(service, {})
+    return verbs.get(lang) or verbs.get("en") or service.replace("_", " ")
 
 
 async def async_setup_entry(
@@ -174,6 +240,7 @@ class MistralConversationEntity(ConversationEntity):
         mode = opts.get(CONF_MODE, DEFAULT_MODE)
         control_ha = opts.get(CONF_CONTROL_HA, DEFAULT_CONTROL_HA)
         conv_id = user_input.conversation_id or self._new_id()
+        language = user_input.language or "en"
 
         if mode == MODE_AGENT:
             result = await self._call_agent(
@@ -181,6 +248,7 @@ class MistralConversationEntity(ConversationEntity):
                 agent_id=opts.get(CONF_AGENT_ID, ""),
                 user_text=user_input.text,
                 conv_id=conv_id,
+                language=language,
             )
         else:
             result = await self._call_model(
@@ -189,13 +257,14 @@ class MistralConversationEntity(ConversationEntity):
                 user_text=user_input.text,
                 conv_id=conv_id,
                 control_ha=control_ha,
+                language=language,
             )
 
         if isinstance(result, ConversationResult):
             return result
 
         raw_reply = result
-        reply = await self._maybe_execute_service(raw_reply, user_input, control_ha)
+        reply = await self._maybe_execute_service(raw_reply, user_input, control_ha, language)
 
         history = self._history.setdefault(conv_id, [])
         history.append({"role": "user", "content": user_input.text})
@@ -203,12 +272,13 @@ class MistralConversationEntity(ConversationEntity):
         if len(history) > 40:
             self._history[conv_id] = history[-40:]
 
-        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response = intent.IntentResponse(language=language)
         intent_response.async_set_speech(reply)
         return ConversationResult(response=intent_response, conversation_id=conv_id)
 
     async def _call_model(
-        self, api_key: str, opts: dict, user_text: str, conv_id: str, control_ha: bool
+        self, api_key: str, opts: dict, user_text: str, conv_id: str,
+        control_ha: bool, language: str = "en"
     ) -> str | ConversationResult:
         model = opts.get(CONF_MODEL, DEFAULT_MODEL)
         max_tokens = int(opts.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
@@ -249,13 +319,14 @@ class MistralConversationEntity(ConversationEntity):
                 "temperature": temperature,
             },
             conv_id=conv_id,
+            language=language,
         )
 
     async def _call_agent(
-        self, api_key: str, agent_id: str, user_text: str, conv_id: str
+        self, api_key: str, agent_id: str, user_text: str, conv_id: str, language: str = "en"
     ) -> str | ConversationResult:
         if not agent_id:
-            return "Fout: geen Agent ID ingesteld. Vul een Agent ID in via de integratie-opties."
+            return _t("no_agent_id", language)
 
         history = self._history.get(conv_id, [])
         messages = list(history)
@@ -266,10 +337,11 @@ class MistralConversationEntity(ConversationEntity):
             endpoint=f"{MISTRAL_API_BASE}/agents/completions",
             payload={"agent_id": agent_id, "messages": messages},
             conv_id=conv_id,
+            language=language,
         )
 
     async def _post_chat(
-        self, api_key: str, endpoint: str, payload: dict, conv_id: str
+        self, api_key: str, endpoint: str, payload: dict, conv_id: str, language: str = "en"
     ) -> str | ConversationResult:
         session = async_get_clientsession(self.hass)
         try:
@@ -291,17 +363,17 @@ class MistralConversationEntity(ConversationEntity):
                 data = await resp.json()
         except (aiohttp.ClientError, HomeAssistantError) as err:
             _LOGGER.error("Mistral AI API error: %s", err)
-            intent_response = intent.IntentResponse(language="nl")
+            intent_response = intent.IntentResponse(language=language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, kon Mistral AI niet bereiken: {err}",
+                _t("api_error", language, err=err),
             )
             return ConversationResult(response=intent_response, conversation_id=conv_id)
 
         return data["choices"][0]["message"]["content"].strip()
 
     async def _maybe_execute_service(
-        self, raw_reply: str, user_input: ConversationInput, control_ha: bool
+        self, raw_reply: str, user_input: ConversationInput, control_ha: bool, language: str = "en"
     ) -> str:
         if not control_ha:
             return raw_reply
@@ -316,7 +388,7 @@ class MistralConversationEntity(ConversationEntity):
 
         if service not in _ALLOWED_SERVICES.get(domain, []) and domain != "homeassistant":
             _LOGGER.warning("Blocked service call %s.%s", domain, service)
-            return f"Ik kan die actie niet uitvoeren ({domain}.{service} is niet toegestaan)."
+            return _t("blocked", language, domain=domain, service=service)
 
         try:
             await self.hass.services.async_call(
@@ -325,14 +397,16 @@ class MistralConversationEntity(ConversationEntity):
             )
             state = self.hass.states.get(entity_id)
             friendly = state.attributes.get("friendly_name", entity_id) if state else entity_id
-            verb = _SERVICE_VERBS.get(service, service.replace("_", " "))
-            return f"Klaar! {friendly} is {verb}."
+            verb = _service_verb(service, language)
+            done = _t("done", language)
+            is_word = _t("is", language)
+            return f"{done}! {friendly} {is_word} {verb}."
         except HomeAssistantError as err:
             _LOGGER.error("Service call failed: %s", err)
-            return f"Sorry, dat is mislukt: {err}"
+            return _t("failed", language, err=err)
         except Exception:
             _LOGGER.exception("Unexpected error in service call")
-            return "Sorry, er ging iets onverwachts mis."
+            return _t("unexpected", language)
 
     @staticmethod
     def _new_id() -> str:
