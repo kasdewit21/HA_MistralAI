@@ -6,6 +6,8 @@
   <h1>Mistral AI Conversation</h1>
   <p><strong>Home Assistant custom integration — Mistral AI as conversation agent and Voxtral as speech-to-text engine.</strong></p>
 
+  <p><em>⚠️ Please note this is not an officially supported integration and is not affiliated with Mistral AI in any way.</em></p>
+
   [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
   [![HA Version](https://img.shields.io/badge/Home%20Assistant-2023.5%2B-blue?style=for-the-badge&logo=home-assistant)](https://www.home-assistant.io/)
   [![Mistral AI](https://img.shields.io/badge/Mistral%20AI-Powered-orange?style=for-the-badge)](https://mistral.ai/)
@@ -31,10 +33,9 @@
 7. [Controlling devices](#controlling-devices)
 8. [Using as a service action](#using-as-a-service-action)
 9. [Speech recognition (STT)](#speech-recognition-stt)
-10. [Icon in the integration overview](#icon-in-the-integration-overview)
-11. [FAQ](#faq)
-12. [Release Notes](#release-notes)
-13. [License](#license)
+10. [FAQ](#faq)
+11. [Release Notes](#release-notes)
+12. [License](#license)
 
 ---
 
@@ -257,16 +258,6 @@ In the options, select a language from the dropdown for best accuracy, or leave 
 
 ---
 
-## Icon in the integration overview
-
-Home Assistant loads integration card icons exclusively from the [brands CDN](https://brands.home-assistant.io). Local `icon.png` files inside the component folder are not shown in the integration list card — this is a HA platform limitation.
-
-To get the icon displayed, the icon files in `custom_components/mistral_conversation/images/` need to be submitted to the [home-assistant/brands](https://github.com/home-assistant/brands) repository as a pull request under `custom_integrations/mistral_conversation/`.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
----
-
 ## FAQ
 
 **Q: The integration does not appear in the Voice Assistants dropdown.**
@@ -293,12 +284,12 @@ A: Mistral AI processes requests via their servers. See their [privacy policy](h
 
 ## Release Notes
 
-### v1.9.0 — 2026-02-23
+### v0.2.0 — 2026-02-23
 **Breaking:** Removed Agent mode — integration now uses Model mode only.
 
 - **Removed:** Agent mode and all Mistral Console agent configuration. All configuration is now done directly in Home Assistant.
 - **Added:** `continue_conversation` option — when enabled, the assistant automatically keeps the microphone open after responses containing a question. Implemented natively via HA's `ConversationResult.continue_conversation` flag (no external automation required). Labelled *Experimental*.
-- **Updated:** Model list — removed deprecated `mistral-7b-latest` and `open-codestral-mamba`. Added `ministral-8b-latest` (new default) and `ministral-3b-latest`. `ministral-8b-latest` is the recommended model for home automation: fast, cost-effective, and excellent at structured instruction-following.
+- **Updated:** Model list — removed deprecated `ministral-7b-latest` and `open-codestral-mamba`. Added `ministral-8b-latest` (new default) and `ministral-3b-latest`. `ministral-8b-latest` is the recommended model for home automation: fast, cost-effective, and excellent at structured instruction-following.
 - **Fixed:** All hardcoded Dutch strings in Python code replaced with English fallbacks. UI labels remain available in both English and Dutch via translation files.
 - **Fixed:** Service confirmation messages no longer start with "Done!" / "Klaar!". Format is now e.g. *"Kitchen light has been turned off."*
 - **Fixed:** Wrong GitHub URL in documentation corrected from `SnarfNL/mistral_conversation` to `SnarfNL/HA_MistralAI`.
@@ -308,7 +299,7 @@ A: Mistral AI processes requests via their servers. See their [privacy policy](h
 
 ---
 
-### v1.8.0 — 2026-02-21
+### v0.1.8 — 2026-02-21
 - **Added:** `icon.png` (128 px) and `icon@2x.png` (256 px) — Mistral M-logo on orange rounded-square background.
 - **Added:** `images/` folder with 256 px and 512 px versions for submission to the home-assistant/brands repository.
 - **Added:** Comprehensive `README.md` modelled after the BlaXun integration.
@@ -319,7 +310,7 @@ A: Mistral AI processes requests via their servers. See their [privacy policy](h
 
 ---
 
-### v1.7.0 — 2026-02-21
+### v0.1.7 — 2026-02-21
 - **Fixed:** STT 400 error: HA always delivers raw PCM bytes; the WAV wrapper was incorrectly skipped when `metadata.format == WAV`.
 - **Fixed:** Conversation 400 error: error response body was silently discarded; now logged at ERROR level.
 - **Fixed:** `HomeAssistantError` raised inside `_post_chat` was not caught by the `aiohttp.ClientError` handler — added combined except clause.
@@ -327,7 +318,7 @@ A: Mistral AI processes requests via their servers. See their [privacy policy](h
 
 ---
 
-### v1.6.0 — 2026-02-21
+### v0.1.6 — 2026-02-21
 - **Added:** Speech-to-text (STT) platform using Mistral's **Voxtral Mini** (`voxtral-mini-latest`).
 - **Added:** Agent mode — use a pre-configured agent from Mistral Console via `agent_id`.
 - **Added:** STT language selector (dropdown with 60+ languages + Auto-detect).
@@ -335,13 +326,13 @@ A: Mistral AI processes requests via their servers. See their [privacy policy](h
 
 ---
 
-### v1.5.0 — 2026-02-21
+### v0.1.5 — 2026-02-21
 - **Added:** `icon.png` and `icon@2x.png` in the component directory.
 - **Added:** Full `README.md` with installation guide, option descriptions, automation examples and FAQ.
 
 ---
 
-### v1.4.0 — 2026-02-21
+### v0.1.4 — 2026-02-21
 - **Fixed:** Mistral API rejects `temperature` values above 1.0 — clamped to `0.0–1.0`.
 - **Fixed:** Removed `top_p` from API payload (cannot be sent together with `temperature`).
 - **Added:** `ConversationEntityFeature.CONTROL` to enable device control.
@@ -349,25 +340,25 @@ A: Mistral AI processes requests via their servers. See their [privacy policy](h
 
 ---
 
-### v1.3.0 — 2026-02-21
+### v0.1.3 — 2026-02-21
 - **Fixed:** `MistralOptionsFlow.__init__` tried to set `self.config_entry` which is a read-only property in HA 2024.x — removed `__init__`.
 - **Added:** `_async_handle_message` (HA 2024.6+ API) with `async_process` fallback for older versions.
 
 ---
 
-### v1.2.0 — 2026-02-21
+### v0.1.2 — 2026-02-21
 - **Fixed:** Conversation agent did not appear in the Voice Assistants dropdown because entities were registered directly instead of via the `conversation` platform.
 - **Changed:** Switched to `async_forward_entry_setups` with `PLATFORMS = ["conversation"]`.
 
 ---
 
-### v1.1.0 — 2026-02-21
+### v0.1.1 — 2026-02-21
 - **Fixed:** 500 error in config flow caused by incorrect OptionsFlow structure.
 - **Changed:** Deprecated `conversation.async_set_agent()` replaced by proper platform setup.
 
 ---
 
-### v1.0.0 — 2026-02-21
+### v0.1.0 — 2026-02-21
 - Initial release.
 - Mistral AI selectable as conversation agent in HA Assist.
 - Configurable model, system prompt, temperature and max tokens via the UI.
