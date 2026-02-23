@@ -35,7 +35,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Map from BCP-47 code → display name used in the config dropdown
+# BCP-47 code → display name (shown in the config dropdown)
 LANGUAGE_OPTIONS: list[tuple[str, str]] = [
     ("",   "Auto-detect"),
     ("af", "Afrikaans"),
@@ -105,12 +105,12 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up STT entity."""
+    """Set up the Voxtral STT entity."""
     async_add_entities([MistralSTTEntity(hass, config_entry)])
 
 
 class MistralSTTEntity(SpeechToTextEntity):
-    """Mistral AI / Voxtral speech-to-text entity — separate device from conversation."""
+    """Mistral AI / Voxtral speech-to-text — separate device from conversation entity."""
 
     _attr_has_entity_name = True
     _attr_name = "Mistral AI STT (Voxtral)"
@@ -118,14 +118,12 @@ class MistralSTTEntity(SpeechToTextEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.hass = hass
         self._entry = entry
-        # _stt suffix → separate device from the conversation entity
         self._attr_unique_id = f"{entry.entry_id}_stt"
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Own device for STT, separate from conversation."""
+        """Separate device from the conversation entity."""
         return DeviceInfo(
-            # Different identifiers from conversation entity → creates SEPARATE device
             identifiers={(DOMAIN, f"{self._entry.entry_id}_stt")},
             name="Mistral AI STT",
             manufacturer="Mistral AI",
@@ -163,7 +161,7 @@ class MistralSTTEntity(SpeechToTextEntity):
         metadata: SpeechMetadata,
         stream: AsyncIterable[bytes],
     ) -> SpeechResult:
-        """Collect raw PCM, wrap in WAV, transcribe via Voxtral."""
+        """Collect raw PCM from HA pipeline, wrap in WAV, transcribe via Voxtral."""
         pcm_data = b""
         async for chunk in stream:
             pcm_data += chunk
@@ -172,11 +170,15 @@ class MistralSTTEntity(SpeechToTextEntity):
             _LOGGER.warning("STT: received empty audio stream")
             return SpeechResult("", SpeechResultState.ERROR)
 
-        _LOGGER.debug("STT: %d bytes PCM rate=%s ch=%s bits=%s",
-                      len(pcm_data), metadata.sample_rate,
-                      metadata.channel, metadata.bit_rate)
+        _LOGGER.debug(
+            "STT: %d bytes PCM — rate=%s channels=%s bits=%s",
+            len(pcm_data),
+            metadata.sample_rate,
+            metadata.channel,
+            metadata.bit_rate,
+        )
 
-        # HA always delivers raw PCM — always wrap in a WAV container
+        # HA always delivers raw PCM frames — always wrap in a proper WAV container
         wav_bytes = _pcm_to_wav(
             pcm_data,
             sample_rate=int(metadata.sample_rate),
@@ -185,13 +187,16 @@ class MistralSTTEntity(SpeechToTextEntity):
         )
 
         api_key = self._entry.data[CONF_API_KEY]
-        lang_code = (self._entry.options.get(CONF_STT_LANGUAGE, DEFAULT_STT_LANGUAGE) or "").strip()
+        lang_code = (
+            self._entry.options.get(CONF_STT_LANGUAGE, DEFAULT_STT_LANGUAGE) or ""
+        ).strip()
 
         session = async_get_clientsession(self.hass)
         try:
             form = aiohttp.FormData()
             form.add_field(
-                "file", wav_bytes,
+                "file",
+                wav_bytes,
                 filename="audio.wav",
                 content_type="application/octet-stream",
             )
@@ -212,7 +217,7 @@ class MistralSTTEntity(SpeechToTextEntity):
                 result = await resp.json()
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Mistral STT API error: %s", err)
+            _LOGGER.error("Mistral STT request failed: %s", err)
             return SpeechResult("", SpeechResultState.ERROR)
 
         text = result.get("text", "").strip()
@@ -220,12 +225,14 @@ class MistralSTTEntity(SpeechToTextEntity):
             _LOGGER.warning("Voxtral returned empty transcription")
             return SpeechResult("", SpeechResultState.ERROR)
 
-        _LOGGER.debug("Voxtral result: %s", text)
+        _LOGGER.debug("Voxtral transcription: %s", text)
         return SpeechResult(text, SpeechResultState.SUCCESS)
 
 
-def _pcm_to_wav(pcm_data: bytes, sample_rate: int, channels: int, sample_width: int) -> bytes:
-    """Wrap raw PCM in a RIFF/WAV container."""
+def _pcm_to_wav(
+    pcm_data: bytes, sample_rate: int, channels: int, sample_width: int
+) -> bytes:
+    """Wrap raw PCM bytes in a RIFF/WAV container."""
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wf:
         wf.setnchannels(channels)

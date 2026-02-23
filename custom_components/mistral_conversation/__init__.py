@@ -17,14 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-# Both platforms are loaded; STT provides Voxtral transcription
 PLATFORMS = ["conversation", "stt"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mistral AI Conversation from a config entry."""
     api_key = entry.data[CONF_API_KEY]
-
     session = async_get_clientsession(hass)
     try:
         async with session.get(

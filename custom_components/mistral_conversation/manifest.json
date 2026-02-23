@@ -1,12 +1,12 @@
 {
   "domain": "mistral_conversation",
   "name": "Mistral AI Conversation",
-  "codeowners": [],
+  "codeowners": ["@SnarfNL"],
   "config_flow": true,
-  "documentation": "https://github.com/your-repo/mistral_conversation",
+  "documentation": "https://github.com/SnarfNL/HA_MistralAI",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
   "requirements": [],
-  "version": "1.1.0"
+  "version": "1.9.0"
 }

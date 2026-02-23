@@ -3,45 +3,43 @@
   "config": {
     "step": {
       "user": {
-        "title": "Verbind met Mistral AI",
-        "description": "Voer je Mistral AI API-sleutel in. Aanmaken via [console.mistral.ai]({api_key_url}).",
+        "title": "Connect to Mistral AI",
+        "description": "Enter your Mistral AI API key. Create one at [console.mistral.ai]({api_key_url}).",
         "data": {
-          "api_key": "API-sleutel"
+          "api_key": "API Key"
         }
       }
     },
     "error": {
-      "cannot_connect": "Kan geen verbinding maken. Controleer je internetverbinding.",
-      "invalid_auth": "Ongeldige API-sleutel. Controleer de sleutel op console.mistral.ai.",
-      "unknown": "Onbekende fout. Zie de logbestanden voor details."
+      "cannot_connect": "Unable to connect. Check your internet connection.",
+      "invalid_auth": "Invalid API key. Please verify at console.mistral.ai.",
+      "unknown": "Unexpected error. Check the Home Assistant logs for details."
     },
     "abort": {
-      "already_configured": "Mistral AI Conversation is al geconfigureerd."
+      "already_configured": "Mistral AI Conversation is already configured."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Mistral AI Conversation instellingen",
+        "title": "Mistral AI Conversation settings",
         "data": {
-          "mode": "Modus",
-          "agent_id": "Agent ID (alleen bij Agent-modus)",
-          "model": "AI-model (alleen bij Model-modus)",
-          "prompt": "Systeemprompt (alleen bij Model-modus)",
-          "temperature": "Creativiteit / Temperature (alleen bij Model-modus)",
-          "max_tokens": "Maximaal tokens in antwoord",
-          "control_ha": "Laat AI Home Assistant bedienen",
+          "model": "AI model",
+          "prompt": "System prompt",
+          "temperature": "Temperature (creativity)",
+          "max_tokens": "Maximum tokens in response",
+          "control_ha": "Allow AI to control Home Assistant devices",
+          "continue_conversation": "Enable conversations and listen to responses (Experimental)",
           "stt_language": "Speech recognition language (STT)"
         },
         "data_description": {
-          "mode": "Kies 'Model' om een model direct in HA te configureren, of 'Agent' om een vooraf geconfigureerde Agent uit de Mistral Console te gebruiken.",
-          "agent_id": "Het ID van een agent die je hebt aangemaakt op console.mistral.ai/build/agents (begint met 'ag_...'). De agent heeft zijn eigen model, systeem-prompt en tools.",
-          "model": "Welk Mistral-model wordt gebruikt. Alleen actief als modus = Model.",
-          "prompt": "Instructies voor de AI. Ondersteunt Jinja2 templates. Alleen actief als modus = Model.",
-          "temperature": "0 = deterministisch, 1 = creatief. Mistral bereik: 0.0–1.0. Alleen actief als modus = Model.",
-          "max_tokens": "Maximale lengte van het AI-antwoord in tokens.",
-          "control_ha": "Als ingeschakeld kan de AI apparaten in je huis bedienen via gesproken of getypte opdrachten.",
-          "stt_language": "Language used by Voxtral for speech-to-text. Select 'Auto-detect' to let Voxtral determine the language automatically."
+          "model": "Which Mistral model to use. Ministral-8b is recommended for home automation commands: fast, cost-effective and great at instruction-following.",
+          "prompt": "Instructions for the AI. Supports Jinja2 templates with {{ ha_name }}, {{ now() }} etc.",
+          "temperature": "0 = deterministic, 1 = creative. Mistral range: 0.0–1.0.",
+          "max_tokens": "Maximum length of the AI response in tokens.",
+          "control_ha": "When enabled the AI can control exposed devices in your home via spoken or typed commands.",
+          "continue_conversation": "When enabled, the assistant automatically keeps listening after a response that ends with a question. Uses the native HA continue_conversation flag. Experimental: behaviour may vary by satellite.",
+          "stt_language": "Language for Voxtral speech-to-text. Select 'Auto-detect' to let Voxtral determine the language automatically."
         }
       }
     }

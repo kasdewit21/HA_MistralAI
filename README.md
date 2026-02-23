@@ -1,202 +1,392 @@
-<!-- Image: Mistral AI Conversation -->
-# Mistral AI Conversation
+<a name="readme-top"></a>
 
-Home Assistant integration that enables **Mistral AI** as a conversation agent, speech-to-text (STT), and support for Mistral Agents.  
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)  
-[![HA Version](https://img.shields.io/badge/Home%20Assistant-2023.5%2B-blue?style=for-the-badge&logo=home-assistant)](https://www.home-assistant.io/)  
-[![Mistral AI](https://img.shields.io/badge/Mistral%20AI-Powered-orange?style=for-the-badge)](https://mistral.ai/)  
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+<div align="center">
+  <img src="custom_components/mistral_conversation/icon@2x.png" alt="Mistral AI Conversation" width="128" height="128">
+
+  <h1>Mistral AI Conversation</h1>
+  <p><strong>Home Assistant custom integration — Mistral AI as conversation agent and Voxtral as speech-to-text engine.</strong></p>
+
+  [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+  [![HA Version](https://img.shields.io/badge/Home%20Assistant-2023.5%2B-blue?style=for-the-badge&logo=home-assistant)](https://www.home-assistant.io/)
+  [![Mistral AI](https://img.shields.io/badge/Mistral%20AI-Powered-orange?style=for-the-badge)](https://mistral.ai/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+</div>
 
 ---
 
 ## Table of Contents
 
-1. [About This Project](#about-this-project)  
-2. [Features](#features)  
-3. [Requirements](#requirements)  
-4. [Installation](#installation)  
-5. [Configuration](#configuration)  
-6. [Options & Modes](#options--modes)  
-7. [Speech-to-Text (STT)](#speech-to-text-stt)  
-8. [Controlling Devices](#controlling-devices)  
-9. [Using as a Service Action](#using-as-a-service-action)  
-10. [Example Prompts](#example-prompts)  
-11. [FAQ](#faq)  
-12. [License](#license)
+1. [About](#about)
+2. [Features](#features)
+3. [Requirements](#requirements)
+4. [Installation](#installation)
+5. [Configuration](#configuration)
+   - [Creating an API key](#creating-an-api-key)
+   - [Setting up the integration](#setting-up-the-integration)
+   - [Selecting as voice assistant](#selecting-as-voice-assistant)
+6. [Options](#options)
+   - [Available models](#available-models)
+   - [System prompt](#system-prompt)
+   - [Continue conversation (Experimental)](#continue-conversation-experimental)
+7. [Controlling devices](#controlling-devices)
+8. [Using as a service action](#using-as-a-service-action)
+9. [Speech recognition (STT)](#speech-recognition-stt)
+10. [Icon in the integration overview](#icon-in-the-integration-overview)
+11. [FAQ](#faq)
+12. [Release Notes](#release-notes)
+13. [License](#license)
 
 ---
 
-## Release notes
-v.1.9 Improved multi language support (2026-2-22)
+## About
 
----
+This integration makes **Mistral AI** available as a fully-featured conversation agent inside Home Assistant's built-in Assist voice pipeline. It also registers **Voxtral** (Mistral's own speech-to-text model) as a native HA STT provider — creating two separate devices, one for conversation and one for transcription, just like the official Google Gemini integration.
 
-## About This Project
-
-This integration makes **Mistral AI** available as a full conversation agent inside Home Assistant.
-
-You can choose between:
-
-- **Model Mode** — Directly configure model settings, prompt template, etc.
-- **Agent Mode** — Use preconfigured Agents from the Mistral Console, including custom tools and system prompts.
-
-> Note: Mistral’s API does not provide text-to-speech (TTS). Use another TTS provider in Home Assistant.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## Features
 
 | Feature | Status | Description |
-|---------|:------:|------------|
-| Conversation agent in HA Assist | ✅ | Selectable assistant |
-| Model-based configuration | ✅ | Direct model configuration |
-| Agent Mode | ✅ | Use external Agents |
-| Speech-to-Text (STT) | ✅ | Voxtral support |
-| Text-to-Speech (TTS) | ❌ | Not supported |
-| Control HA devices | ✅ | Lights, switches, covers |
-| Session memory | ✅ | Per conversation |
-| Jinja2 prompt templating | ✅ | Dynamic prompts |
-| Language detection | ✅ | Responds in user language |
+|---|---|---|
+| Conversation agent in HA Assist | ✅ | Selectable as agent in Voice Assistants |
+| Smart home control | ✅ | Control lights, switches, covers, locks, etc. |
+| Speech recognition (STT) | ✅ | Voxtral Mini via `/v1/audio/transcriptions` |
+| TTS (text-to-speech) | ❌ | Not available in the Mistral API — use Piper or Google TTS |
+| Conversation memory | ✅ | Context kept per session (20 turns) |
+| Jinja2 system prompt | ✅ | Templates with `{{ now() }}`, `{{ ha_name }}` etc. |
+| Multilingual | ✅ | Responds in the user's language |
+| Continue conversation | ✅ | Keeps microphone open after questions (Experimental) |
+| Separate devices | ✅ | Conversation and STT appear as separate HA devices |
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## Requirements
 
-- Home Assistant Core 2023.5+
-- Mistral AI API key
+| Requirement | Minimum version |
+|---|---|
+| Home Assistant Core | 2023.5 |
+| Python | 3.11 |
+| Mistral AI account + API key | — |
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## Installation
 
-### Via HACS (Recommended)
+### Via HACS (recommended)
 
-1. Open HACS → Integrations → Custom repositories  
-2. Add:
+1. HACS → **Integrations** → ⋮ → **Custom repositories**
+2. URL: `https://github.com/SnarfNL/HA_MistralAI` — category: **Integration**
+3. Search "Mistral AI Conversation" → **Download**
+4. **Fully restart** Home Assistant
 
-        https://github.com/SnarfNL/mistral_conversation
+### Manual
 
-   Category: Integration  
-3. Install “Mistral AI Conversation”  
-4. Restart Home Assistant
+1. Copy `custom_components/mistral_conversation/` to `/config/custom_components/`
+2. Remove old `__pycache__` directories if updating from a previous version:
+   ```bash
+   rm -rf /config/custom_components/mistral_conversation/__pycache__
+   ```
+3. **Fully restart** Home Assistant (not just reload)
 
-### Manual Install
-
-1. Copy:
-
-        custom_components/mistral_conversation/
-
-   to:
-
-        /config/custom_components/
-
-2. (Optional) Remove cache:
-
-        rm -rf /config/custom_components/mistral_conversation/__pycache__
-
-3. Restart Home Assistant fully
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## Configuration
 
-### Creating an API Key
+### Creating an API key
 
-1. Sign up at https://mistral.ai  
-2. Go to https://console.mistral.ai/api-keys  
-3. Create and copy your API key  
+1. Sign up at [mistral.ai](https://mistral.ai/)
+2. Go to [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys)
+3. Click **Create new key** and copy it immediately
 
-### Setting Up the Integration
+### Setting up the integration
 
-1. Settings → Devices & Services → Add Integration  
-2. Search “Mistral AI Conversation”  
-3. Enter your API key  
+1. **Settings → Devices & Services → + Add Integration**
+2. Search for **Mistral AI Conversation**
+3. Enter your API key → **Submit**
 
----
+### Selecting as voice assistant
 
-## Options & Modes
+1. **Settings → Voice Assistants** → click your assistant
+2. Set **Conversation agent** to **Mistral AI Conversation**
+3. Optionally set **Speech-to-text** to **Mistral AI STT (Voxtral)**
+4. Save
 
-### Model Mode
-
-Default options:
-
-- Mode: Model  
-- Model: mistral-large-latest  
-- Temperature: 0.7  
-- Max tokens: 1024  
-
-### Agent Mode
-
-1. Create an agent at https://console.mistral.ai/build/agents  
-2. Copy the Agent ID (ag_...)  
-3. Enter it in integration options  
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
-## Speech-to-Text (STT)
+## Options
 
-STT entity:
+Click the integration → **Configure** to change settings.
 
-    stt.mistral_ai_stt_voxtral
+| Option | Default | Description |
+|---|---|---|
+| **AI model** | `ministral-8b-latest` | Which Mistral model to use |
+| **System prompt** | See below | Jinja2 template with AI instructions |
+| **Temperature** | `0.7` | Creativity: 0.0 = deterministic, 1.0 = creative |
+| **Max tokens** | `1024` | Maximum response length |
+| **Control HA** | On | Allow the AI to control exposed devices |
+| **Continue conversation** | Off | Keep listening after questions (Experimental) |
+| **STT language** | Auto-detect | Language for Voxtral transcription |
 
-To enable:
-- Settings → Voice Assistants  
-- Select Mistral AI STT (Voxtral)
+### Available models
 
-Specs:
-- Model: voxtral-mini-latest  
-- Max length: 30 minutes  
-- Formats: WAV, OGG  
-- 16000 Hz  
+| Model | Speed | Cost | Best for |
+|---|---|---|---|
+| `ministral-8b-latest` ⭐ | ★★★★★ | $ | Home automation commands — fast, accurate, cheap |
+| `ministral-3b-latest` | ★★★★★ | $ | Ultra-simple commands, lowest latency |
+| `mistral-small-latest` | ★★★★ | $$ | Balanced: quality and speed |
+| `mistral-large-latest` | ★★★ | $$$$ | Complex reasoning, long conversations |
+| `open-mistral-nemo` | ★★★★ | $ | Open-source alternative |
+
+> **Recommendation:** Start with `ministral-8b-latest`. It has excellent instruction-following, handles structured JSON output reliably (needed for device control), and costs a fraction of larger models.
+
+### System prompt
+
+The system prompt supports Jinja2 templates:
+
+```jinja2
+You are a helpful voice assistant for {{ ha_name }}.
+Answer in the same language the user speaks.
+Today is {{ now().strftime('%A, %B %d, %Y') }} and the time is {{ now().strftime('%H:%M') }}.
+Be concise and friendly.
+```
+
+**Available template variables:**
+
+| Variable | Description |
+|---|---|
+| `{{ ha_name }}` | Your Home Assistant location name |
+| `{{ now() }}` | Current datetime object |
+| `{{ now().strftime(…) }}` | Formatted date/time string |
+
+### Continue conversation (Experimental)
+
+When enabled, the assistant automatically keeps the microphone open after any response that contains a question (`?`). This is implemented using the native `continue_conversation` flag in HA's `ConversationResult` — no separate automation is needed.
+
+> **Note:** This feature requires a satellite device that supports `assist_satellite.start_conversation`. Behaviour may vary between satellite types.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
-## Controlling Devices
+## Controlling devices
 
-Enable “Allow AI to control Home Assistant” and expose entities.
+Enable **Allow AI to control Home Assistant devices** in the options, then expose the entities you want via **Settings → Voice Assistants → Exposed devices**.
 
-Supported domains:
-light, switch, cover, media_player, fan, climate, lock, scene, script, automation
+### Example commands
+
+| What you say | What happens |
+|---|---|
+| "Turn off the kitchen light" | `light.turn_off` |
+| "Open the blinds" | `cover.open_cover` |
+| "Lock the front door" | `lock.lock` |
+| "Play something in the living room" | `media_player.media_play` |
+| "Activate the movie scene" | `scene.turn_on` |
+
+### Supported domains
+
+`light` · `switch` · `cover` · `media_player` · `fan` · `climate` · `lock` · `alarm_control_panel` · `scene` · `script` · `automation` · `homeassistant`
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
-## Using as a Service Action
+## Using as a service action
 
-Example automation:
+Use `conversation.process` in automations or scripts:
 
-    action:
-      - service: conversation.process
-        data:
-          agent_id: conversation.mistral_ai_conversation
-          text: "What's the outside temperature?"
-          response_variable: result
+```yaml
+action: conversation.process
+data:
+  agent_id: conversation.mistral_ai_conversation
+  text: "What is the temperature in the living room?"
+response_variable: result
+```
+
+The response text is in `result.response.speech.plain.speech`.
+
+### Example: Smart doorbell notification
+
+```yaml
+alias: Smart doorbell notification
+sequence:
+  - action: conversation.process
+    data:
+      agent_id: conversation.mistral_ai_conversation
+      text: >
+        The doorbell rang at {{ now().strftime('%H:%M') }}.
+        Write a short, friendly notification message.
+    response_variable: ai_result
+  - action: notify.mobile_app
+    data:
+      title: "Doorbell 🔔"
+      message: "{{ ai_result.response.speech.plain.speech }}"
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
-## Example Prompts
+## Speech recognition (STT)
 
-- “How many lights are on?”
-- “Turn off bedroom lights.”
-- “Activate movie mode.”
-- “What’s the temperature in the living room?”
+A `stt.mistral_ai_stt_voxtral` entity is registered automatically.
+
+### Voxtral specifications
+
+| Property | Value |
+|---|---|
+| Model | `voxtral-mini-latest` |
+| Supported format | WAV (16-bit, 16 kHz, mono PCM) |
+| Languages | 60+ with auto-detect |
+| Pricing | ~$0.003 per minute |
+
+### Setting STT language
+
+In the options, select a language from the dropdown for best accuracy, or leave it on **Auto-detect**.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+## Icon in the integration overview
+
+Home Assistant loads integration card icons exclusively from the [brands CDN](https://brands.home-assistant.io). Local `icon.png` files inside the component folder are not shown in the integration list card — this is a HA platform limitation.
+
+To get the icon displayed, the icon files in `custom_components/mistral_conversation/images/` need to be submitted to the [home-assistant/brands](https://github.com/home-assistant/brands) repository as a pull request under `custom_integrations/mistral_conversation/`.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## FAQ
 
-Q: I don’t see the integration.  
-A: Restart Home Assistant.
+**Q: The integration does not appear in the Voice Assistants dropdown.**
+A: Make sure you performed a full restart (not just reload) and cleared any `__pycache__` directories.
 
-Q: 400 error?  
-A: Check temperature value (0.0–1.0).
+**Q: I get a 400 Bad Request error.**
+A: Check the HA logs for the full error body. A common cause is an invalid model name or a temperature value outside 0.0–1.0.
 
-Q: Agent not responding?  
-A: Verify Agent ID starts with ag_.
+**Q: Can I use TTS with this integration?**
+A: Mistral has no TTS API. Use Piper (local, free), Google TTS, or ElevenLabs as your TTS provider in the voice assistant pipeline.
+
+**Q: How much does it cost?**
+A: With `ministral-8b-latest` and typical home use, expect less than €1–2 per month. Voxtral STT adds ~€0.003/minute. See [mistral.ai/pricing](https://mistral.ai/pricing/).
+
+**Q: Does continue conversation work on all satellites?**
+A: It requires a satellite that supports the `assist_satellite` integration and `start_conversation`. It has been tested with ESPHome voice satellites. Behaviour on other devices may vary.
+
+**Q: Are my conversations stored?**
+A: Mistral AI processes requests via their servers. See their [privacy policy](https://mistral.ai/privacy-policy) for details.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+## Release Notes
+
+### v1.9.0 — 2026-02-23
+**Breaking:** Removed Agent mode — integration now uses Model mode only.
+
+- **Removed:** Agent mode and all Mistral Console agent configuration. All configuration is now done directly in Home Assistant.
+- **Added:** `continue_conversation` option — when enabled, the assistant automatically keeps the microphone open after responses containing a question. Implemented natively via HA's `ConversationResult.continue_conversation` flag (no external automation required). Labelled *Experimental*.
+- **Updated:** Model list — removed deprecated `mistral-7b-latest` and `open-codestral-mamba`. Added `ministral-8b-latest` (new default) and `ministral-3b-latest`. `ministral-8b-latest` is the recommended model for home automation: fast, cost-effective, and excellent at structured instruction-following.
+- **Fixed:** All hardcoded Dutch strings in Python code replaced with English fallbacks. UI labels remain available in both English and Dutch via translation files.
+- **Fixed:** Service confirmation messages no longer start with "Done!" / "Klaar!". Format is now e.g. *"Kitchen light has been turned off."*
+- **Fixed:** Wrong GitHub URL in documentation corrected from `SnarfNL/mistral_conversation` to `SnarfNL/HA_MistralAI`.
+- **Fixed:** Removed "(only in Model mode)" labels from all UI options since Agent mode no longer exists.
+- **Optimised:** `_post_chat` error handling consolidated; `HomeAssistantError` and `aiohttp.ClientError` caught in a single handler. Error messages are now in English.
+- **Optimised:** History trimming now preserves exactly the last 40 messages (20 turns) using a single slice operation.
+
+---
+
+### v1.8.0 — 2026-02-21
+- **Added:** `icon.png` (128 px) and `icon@2x.png` (256 px) — Mistral M-logo on orange rounded-square background.
+- **Added:** `images/` folder with 256 px and 512 px versions for submission to the home-assistant/brands repository.
+- **Added:** Comprehensive `README.md` modelled after the BlaXun integration.
+- **Fixed:** STT and conversation entities now have **separate `DeviceInfo`** with distinct `identifiers`, matching the pattern used by the Google Gemini integration.
+- **Fixed:** `MistralSTTEntity` was missing `DeviceInfo` entirely — caused WebSocket handler errors (`Received binary message for non-existing handler`).
+- **Fixed:** PCM-to-WAV wrapping now always applied regardless of `metadata.format`, fixing 400 errors on the Voxtral endpoint.
+- **Fixed:** Full HTTP response body now logged on any 4xx/5xx from the chat API, making debugging possible.
+
+---
+
+### v1.7.0 — 2026-02-21
+- **Fixed:** STT 400 error: HA always delivers raw PCM bytes; the WAV wrapper was incorrectly skipped when `metadata.format == WAV`.
+- **Fixed:** Conversation 400 error: error response body was silently discarded; now logged at ERROR level.
+- **Fixed:** `HomeAssistantError` raised inside `_post_chat` was not caught by the `aiohttp.ClientError` handler — added combined except clause.
+- **Fixed:** `DeviceInfo` added to `MistralSTTEntity` to allow correct HA device registration.
+
+---
+
+### v1.6.0 — 2026-02-21
+- **Added:** Speech-to-text (STT) platform using Mistral's **Voxtral Mini** (`voxtral-mini-latest`).
+- **Added:** Agent mode — use a pre-configured agent from Mistral Console via `agent_id`.
+- **Added:** STT language selector (dropdown with 60+ languages + Auto-detect).
+- **Changed:** Conversation and STT entities registered as separate HA devices.
+
+---
+
+### v1.5.0 — 2026-02-21
+- **Added:** `icon.png` and `icon@2x.png` in the component directory.
+- **Added:** Full `README.md` with installation guide, option descriptions, automation examples and FAQ.
+
+---
+
+### v1.4.0 — 2026-02-21
+- **Fixed:** Mistral API rejects `temperature` values above 1.0 — clamped to `0.0–1.0`.
+- **Fixed:** Removed `top_p` from API payload (cannot be sent together with `temperature`).
+- **Added:** `ConversationEntityFeature.CONTROL` to enable device control.
+- **Improved:** JSON extraction from AI response now handles markdown code fences.
+
+---
+
+### v1.3.0 — 2026-02-21
+- **Fixed:** `MistralOptionsFlow.__init__` tried to set `self.config_entry` which is a read-only property in HA 2024.x — removed `__init__`.
+- **Added:** `_async_handle_message` (HA 2024.6+ API) with `async_process` fallback for older versions.
+
+---
+
+### v1.2.0 — 2026-02-21
+- **Fixed:** Conversation agent did not appear in the Voice Assistants dropdown because entities were registered directly instead of via the `conversation` platform.
+- **Changed:** Switched to `async_forward_entry_setups` with `PLATFORMS = ["conversation"]`.
+
+---
+
+### v1.1.0 — 2026-02-21
+- **Fixed:** 500 error in config flow caused by incorrect OptionsFlow structure.
+- **Changed:** Deprecated `conversation.async_set_agent()` replaced by proper platform setup.
+
+---
+
+### v1.0.0 — 2026-02-21
+- Initial release.
+- Mistral AI selectable as conversation agent in HA Assist.
+- Configurable model, system prompt, temperature and max tokens via the UI.
+- Home Assistant device control via spoken commands.
+- Conversation history per session.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ## License
 
-MIT License — see LICENSE file.
+Distributed under the MIT License. See `LICENSE` for more information.
 
-Made for the Home Assistant community.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+<div align="center">
+  Made with ❤️ for the Home Assistant community<br>
+  Inspired by the work of <a href="https://github.com/BlaXun/home_assistant_mistral_ai">BlaXun</a>
+</div>
