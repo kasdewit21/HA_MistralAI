@@ -284,6 +284,14 @@ A: Mistral AI processes requests via their servers. See their [privacy policy](h
 
 ## Release Notes
 
+### v0.2.1 — 2026-02-23
+- **Fixed:** Service confirmation responses are now fully dynamic and language-aware. The AI generates the confirmation text itself (in whatever language the user is speaking) via a `"confirmation"` field in the JSON action payload. The hardcoded English `_SERVICE_PAST_TENSE` dictionary has been removed entirely.
+- **Fixed:** `volume_set` service call was incorrectly blocked — added `volume_set`, `volume_mute`, `select_source`, `select_sound_mode`, `media_next_track`, `media_previous_track` to the media_player allowlist.
+- **Fixed:** Service calls with extra parameters (e.g. `volume_level`, `temperature`) now work correctly via a `"service_data"` field in the JSON payload.
+- **Improved:** Extended allowlist with `cover.set_cover_position`, `fan.set_percentage`, `fan.set_preset_mode`, `climate.set_temperature`, `climate.set_hvac_mode`, `input_boolean`, `input_number`, and `number` domains.
+
+---
+
 ### v0.2.0 — 2026-02-23
 **Breaking:** Removed Agent mode — integration now uses Model mode only.
 
